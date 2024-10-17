@@ -3,6 +3,8 @@ import requests
 import json
 from frappe import enqueue
 import re
+import google
+from google import service_account
 
 
 def user_id(doc):
@@ -32,6 +34,18 @@ def convert_message(message):
     # cleantitle = re.sub(CLEANR, "",title)
     return cleanmessage
 
+def _get_access_token():
+  """Retrieve a valid access token that can be used to authorize requests.
+
+  :return: Access token.
+  """
+  SCOPES=("https://www.googleapis.com/auth/firebase.messaging")
+  server_key = frappe.db.get_single_value("FCM Notification Settings", "server_key")
+  credentials = service_account.Credentials.from_service_account_info(server_key, scopes=SCOPES)
+  request = google.auth.transport.requests.Request()
+  credentials.refresh(request)
+  return credentials.token
+
 
 def process_notification(device_id, notification):
     message = notification.email_content
@@ -40,26 +54,26 @@ def process_notification(device_id, notification):
         message = convert_message(message)
     if title:
         title = convert_message(title)
-
-    url = "https://fcm.googleapis.com/fcm/send"
+    project = frappe.db.get_single_value("FCM Notification Settings", "gcp_project_name")
+    url = "https://fcm.googleapis.com/v1/projects/"+project+"/messages:send"
     body = {
-        "to": device_id.device_id,
+        "message": {
+            "token": device_id.device_id,
         "notification": {"body": message, "title": title},
         "data": {
             "doctype": notification.document_type,
             "docname": notification.document_name,
+        }
         },
     }
 
-    server_key = frappe.db.get_single_value("FCM Notification Settings", "server_key")
-    auth = f"Bearer {server_key}"
+    auth = f"Bearer "+_get_access_token()
     req = requests.post(
         url=url,
         data=json.dumps(body),
         headers={
             "Authorization": auth,
-            "Content-Type": "application/json",
-            "Accept": "application/json",
+            "Content-Type": "application/json; UTF-8",
         },
     )
     frappe.log_error(req.text)

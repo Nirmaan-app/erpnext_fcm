@@ -7,7 +7,8 @@
  "engine": "InnoDB",
  "field_order": [
   "settings_section",
-  "server_key"
+  "server_key",
+  "gcp_project_name"
  ],
  "fields": [
   {
@@ -17,15 +18,20 @@
   },
   {
    "fieldname": "server_key",
-   "fieldtype": "Data",
-   "label": "Server Key",
+   "fieldtype": "JSON",
+   "label": "Credentials",
    "length": 250
+  },
+  {
+   "fieldname": "gcp_project_name",
+   "fieldtype": "Data",
+   "label": "GCP Project Name "
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2022-02-06 15:25:43.703960",
+ "modified": "2024-10-17 12:53:32.497857",
  "modified_by": "Administrator",
  "module": "Fcm Notification",
  "name": "FCM Notification Settings",
@@ -43,5 +49,6 @@
   }
  ],
  "sort_field": "modified",
- "sort_order": "DESC"
+ "sort_order": "DESC",
+ "states": []
 }
